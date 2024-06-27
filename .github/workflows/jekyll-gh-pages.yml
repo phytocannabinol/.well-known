@@ -1,12 +1,12 @@
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
-name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+# Workflow for deploying a static site to GitHub Pages under a specific subdirectory
+name: Deploy Static Site to .well-known with GitHub Pages
 
 on:
-  # Runs on pushes targeting the default branch
+  # Runs on pushes to the default branch
   push:
     branches: ["main"]
 
-  # Allows you to run this workflow manually from the Actions tab
+  # Allows manual triggering of the workflow
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -15,28 +15,34 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
-# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+# Ensures only one deployment runs at a time
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  # Build job
+  # Build job (prepares the site for deployment)
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout the repository
         uses: actions/checkout@v4
-      - name: Setup Pages
-        uses: actions/configure-pages@v5
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./
-          destination: ./_site
+
+      - name: Prepare .well-known directory
+        run: |
+          # Ensure the .well-known directory exists
+          mkdir -p .well-known
+          # Copy all files to .well-known directory (if needed)
+          cp -R * .well-known/
+          # Remove the workflow file from the .well-known directory if it's there
+          rm -f .well-known/.github/workflows/*.yml
+          # Remove the directory itself from inside .well-known to avoid recursion
+          rm -rf .well-known/.well-known
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.well-known'  # Upload the .well-known directory
 
   # Deployment job
   deploy:
